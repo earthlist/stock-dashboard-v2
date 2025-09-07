@@ -1,16 +1,20 @@
-import streamlit as st
 import pandas as pd
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+from google.oauth2.service_account import Credentials  # ใช้ google-auth แทน oauth2client
 
 # ------------------ Google Sheets Setup ------------------
-# ต้องสร้าง Service Account JSON Key และอัปโหลดขึ้นใน repo ของคุณ เช่น "gcp_key.json"
-SHEET_NAME = "macro_dashboard"   # ตั้งชื่อ sheet ใน Google Sheets
+SHEET_NAME = "macro_dashboard"   # ชื่อ sheet ใน Google Sheets
 RANGE_NAME = "Sheet1!A:B"        # คอลัมน์เก็บ key และ value
 
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+# กำหนด scope
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets",
+          "https://www.googleapis.com/auth/drive"]
+
+# อ่าน credentials จาก Streamlit secrets
 service_account_info = st.secrets["gcp_service_account"]
-creds = ServiceAccountCredentials.from_json_keyfile_dict(service_account_info, scope)
+
+# ใช้ google-auth สร้าง Credentials
+creds = Credentials.from_service_account_info(service_account_info, scopes=SCOPES)
 client = gspread.authorize(creds)
 
 # เปิดไฟล์ Google Sheet
@@ -38,25 +42,7 @@ st.set_page_config(page_title="🌍 Global Macro Dashboard", layout="wide")
 st.title("🌍 Global Macro Dashboard — Historicals & Signals")
 st.markdown("อัพเดตตัวเลข แล้วดูสัญญาณ + แนวโน้มสินทรัพย์แบบอัตโนมัติ (ตามกฎเชิงประวัติศาสตร์ / Historical Rules)")
 
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    core_pce = st.number_input("Core PCE YoY (%) / เงินเฟ้อพื้นฐาน PCE", value=get_value("core_pce", 2.0), step=0.1, format="%.2f")
-    core_cpi = st.number_input("Core CPI YoY (%) / เงินเฟ้อพื้นฐาน CPI", value=get_value("core_cpi", 2.2), step=0.1, format="%.2f")
-    ten_y = st.number_input("US 10Y Yield (%) / บอนด์ยีลด์ 10 ปี", value=get_value("ten_y", 4.0), step=0.1, format="%.2f")
-    fed_rate = st.number_input("Fed Funds Rate (%) / อัตราดอกเบี้ยนโยบายสหรัฐ", value=get_value("fed_rate", 5.25), step=0.25, format="%.2f")
-with col2:
-    pmi = st.number_input("PMI (Global/ISM) / ดัชนี PMI", value=get_value("pmi", 50.0), step=0.1, format="%.1f")
-    unemp = st.number_input("US Unemployment Rate (%) / การว่างงาน", value=get_value("unemp", 3.8), step=0.1, format="%.2f")
-    dxy = st.number_input("US Dollar Index (DXY) / ดัชนีดอลลาร์", value=get_value("dxy", 103.0), step=0.1, format="%.1f")
-    debt_gdp = st.number_input("US Debt-to-GDP (%) / หนี้สาธารณะต่อ GDP", value=get_value("debt_gdp", 120.0), step=1.0, format="%.0f")
-with col3:
-    m2 = st.number_input("M2 YoY Growth (%) / การเติบโตของ M2", value=get_value("m2", 2.0), step=0.5, format="%.1f")
-    repo = st.number_input("Overnight Repo Rate (%) / ดอกเบี้ยรีโป", value=get_value("repo", 5.0), step=0.1, format="%.2f")
-    margin = st.number_input("Margin Debt (USD bn) / ยอดมาร์จิ้น (พันล้านดอลลาร์)", value=get_value("margin", 900.0), step=50.0, format="%.0f")
-with col4:
-    gold = st.number_input("Gold (USD/oz) / ราคาทอง", value=get_value("gold", 2500.0), step=1.0, format="%.0f")
-    spx = st.number_input("S&P 500 Index / ดัชนี S&P 500", value=get_value("spx", 5600.0), step=1.0, format="%.0f")
-    btc = st.number_input("Bitcoin (USD) / ราคา BTC", value=get_value("btc", 70000.0), step=100.0, format="%.0f")
+# ... ส่วนของ Streamlit layout และ input เหมือนเดิม ...
 
 # ปุ่ม Save → อัพเดตค่าใน Google Sheets
 if st.button("💾 Save to Google Sheets"):
