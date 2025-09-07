@@ -1,11 +1,10 @@
 import streamlit as st
 import pandas as pd
 import gspread
-from google.oauth2.service_account import Credentials  # ใช้ google-auth แทน oauth2client
+from google.oauth2.service_account import Credentials
 
 # ------------------ Google Sheets Setup ------------------
-SHEET_NAME = "stock-dashboard"   # ชื่อ sheet ใน Google Sheets
-RANGE_NAME = "Sheet1!A:B"        # คอลัมน์เก็บ key และ value
+SHEET_NAME = "macro_dashboard"   # ชื่อ sheet ใน Google Sheets
 
 # กำหนด scope
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets",
@@ -21,63 +20,62 @@ client = gspread.authorize(creds)
 # เปิดไฟล์ Google Sheet
 sheet = client.open(SHEET_NAME).sheet1
 
-# โหลดข้อมูลจาก Google Sheets
+# โหลดค่าปัจจุบันจาก Google Sheets เป็น dict
 data = sheet.get_all_records()
+# ใช้ key เป็นตัวดึงค่า
 values_dict = {row["key"]: float(row["value"]) for row in data} if data else {}
 
-# ประกาศฟังก์ชันดึงค่า
+# ฟังก์ชันดึงค่า
 def get_value(name, default):
     return values_dict.get(name, default)
 
-# ดึงค่ามาเป็นตัวแปร
-core_pce = get_value("core_pce", 2.0)
-core_cpi = get_value("core_cpi", 2.0)
-ten_y = get_value("ten_y", 3.5)
-fed_rate = get_value("fed_rate", 2.0)
-pmi = get_value("pmi", 50.0)
-unemp = get_value("unemp", 4.0)
-dxy = get_value("dxy", 100.0)
-debt_gdp = get_value("debt_gdp", 80.0)
-m2 = get_value("m2", 5.0)
-repo = get_value("repo", 2.0)
-margin = get_value("margin", 500.0)
-gold = get_value("gold", 1800.0)
-spx = get_value("spx", 4000.0)
-btc = get_value("btc", 30000.0)
-
+# ฟังก์ชันอัพเดตค่า
 def set_value(name, val):
-    # update หรือ insert ถ้า key ยังไม่มี
     records = sheet.get_all_records()
     keys = [r["key"] for r in records]
     if name in keys:
-        row_index = keys.index(name) + 2  # index + header row
-        sheet.update_cell(row_index, 2, val)
+        row_index = keys.index(name) + 2  # index + header
+        sheet.update_cell(row_index, 3, val)  # column 3 = value
     else:
-        sheet.append_row([name, val])
+        sheet.append_row([name, "US", val, pd.Timestamp.now().date()])
 
 # ------------------ Streamlit App ------------------
 st.set_page_config(page_title="🌍 Global Macro Dashboard", layout="wide")
 st.title("🌍 Global Macro Dashboard — Historicals & Signals")
-st.markdown("อัพเดตตัวเลข แล้วดูสัญญาณ + แนวโน้มสินทรัพย์แบบอัตโนมัติ (ตามกฎเชิงประวัติศาสตร์ / Historical Rules)")
+st.markdown("อัพเดตตัวเลข แล้วดูสัญญาณ + แนวโน้มสินทรัพย์แบบอัตโนมัติ (ตามกฎเชิงประวัติศาสตร์)")
 
-# ... ส่วนของ Streamlit layout และ input เหมือนเดิม ...
+# ------------------ Input Fields ------------------
+core_pce = st.number_input("Core PCE (%)", value=get_value("Core PCE", 2.0))
+core_cpi = st.number_input("Core CPI (%)", value=get_value("Core CPI", 2.0))
+ten_y = st.number_input("US 10Y Yield (%)", value=get_value("US 10Y Yield", 3.5))
+fed_rate = st.number_input("Fed Funds Rate (%)", value=get_value("Fed Funds Rate", 2.0))
+pmi = st.number_input("PMI", value=get_value("PMI", 50.0))
+unemp = st.number_input("Unemployment (%)", value=get_value("Unemployment", 4.0))
+dxy = st.number_input("DXY", value=get_value("DXY", 100.0))
+debt_gdp = st.number_input("Debt-to-GDP (%)", value=get_value("Debt-to-GDP", 80.0))
+m2 = st.number_input("M2 Growth (%)", value=get_value("M2 Growth", 5.0))
+repo = st.number_input("Repo (%)", value=get_value("Repo", 2.0))
+margin = st.number_input("Margin Debt", value=get_value("Margin Debt", 500.0))
+gold = st.number_input("Gold", value=get_value("Gold", 1800.0))
+spx = st.number_input("S&P 500", value=get_value("S&P 500", 4000.0))
+btc = st.number_input("Bitcoin", value=get_value("Bitcoin", 30000.0))
 
-# ปุ่ม Save → อัพเดตค่าใน Google Sheets
+# ------------------ Save Button ------------------
 if st.button("💾 Save to Google Sheets"):
-    set_value("core_pce", core_pce)
-    set_value("core_cpi", core_cpi)
-    set_value("ten_y", ten_y)
-    set_value("fed_rate", fed_rate)
-    set_value("pmi", pmi)
-    set_value("unemp", unemp)
-    set_value("dxy", dxy)
-    set_value("debt_gdp", debt_gdp)
-    set_value("m2", m2)
-    set_value("repo", repo)
-    set_value("margin", margin)
-    set_value("gold", gold)
-    set_value("spx", spx)
-    set_value("btc", btc)
+    set_value("Core PCE", core_pce)
+    set_value("Core CPI", core_cpi)
+    set_value("US 10Y Yield", ten_y)
+    set_value("Fed Funds Rate", fed_rate)
+    set_value("PMI", pmi)
+    set_value("Unemployment", unemp)
+    set_value("DXY", dxy)
+    set_value("Debt-to-GDP", debt_gdp)
+    set_value("M2 Growth", m2)
+    set_value("Repo", repo)
+    set_value("Margin Debt", margin)
+    set_value("Gold", gold)
+    set_value("S&P 500", spx)
+    set_value("Bitcoin", btc)
     st.success("บันทึกข้อมูลเรียบร้อย ✅")
     
 # ---------- Rules ----------
