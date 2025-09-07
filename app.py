@@ -4,7 +4,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 
 # ------------------ Google Sheets Setup ------------------
-SHEET_NAME = "macro_dashboard"   # ชื่อ sheet ใน Google Sheets
+SHEET_NAME = "stock-dashboard"   # ชื่อ sheet ใน Google Sheets
 
 # กำหนด scope
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets",
