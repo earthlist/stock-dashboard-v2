@@ -4,7 +4,7 @@ import gspread
 from google.oauth2.service_account import Credentials  # ใช้ google-auth แทน oauth2client
 
 # ------------------ Google Sheets Setup ------------------
-SHEET_NAME = "macro_dashboard"   # ชื่อ sheet ใน Google Sheets
+SHEET_NAME = "stock-dashboard"   # ชื่อ sheet ใน Google Sheets
 RANGE_NAME = "Sheet1!A:B"        # คอลัมน์เก็บ key และ value
 
 # กำหนด scope
