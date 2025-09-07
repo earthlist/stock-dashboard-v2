@@ -24,6 +24,21 @@ sheet = client.open(SHEET_NAME).sheet1
 # โหลดค่าปัจจุบันจาก Google Sheets เป็น dict
 data = sheet.get_all_records()
 values_dict = {row["key"]: float(row["value"]) for row in data} if data else {}
+# --- ดึงค่าจาก Google Sheet มาเก็บในตัวแปร ---
+core_pce = get_value("core_pce", 2.0)   # default 2.0%
+core_cpi = get_value("core_cpi", 2.0)
+ten_y = get_value("ten_y", 3.5)
+fed_rate = get_value("fed_rate", 2.0)
+pmi = get_value("pmi", 50.0)
+unemp = get_value("unemp", 4.0)
+dxy = get_value("dxy", 100.0)
+debt_gdp = get_value("debt_gdp", 80.0)
+m2 = get_value("m2", 5.0)
+repo = get_value("repo", 2.0)
+margin = get_value("margin", 500.0)
+gold = get_value("gold", 1800.0)
+spx = get_value("spx", 4000.0)
+btc = get_value("btc", 30000.0)
 
 def get_value(name, default):
     return values_dict.get(name, default)
